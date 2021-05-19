@@ -30,10 +30,8 @@ function authorize(credentials, callback) {
 function getAuthorization(credentials) {
 	const {client_secret, client_id, redirect_uris} = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-
-  const token = JSON.parse(fs.readFileSync(TOKEN_PATH));
+  const token = JSON.parse(fs.readFileSync(TOKEN_PATH)); // get token from local file
   oAuth2Client.setCredentials(token);
- 
   return oAuth2Client;
 }
 
