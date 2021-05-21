@@ -9,6 +9,8 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 // time.
 const TOKEN_PATH = 'token.json';
 
+const CREDENTIALS_PATH = 'credentials.json'
+
 /**
  * Create an OAuth2 client with the given credentials.
  * @param {Object} credentials The authorization client credentials.

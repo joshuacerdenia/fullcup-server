@@ -18,13 +18,15 @@ function getCalendarList() {
     .list()
     .then((res, err) => {
       if (err) return false;
-      return res.data.items.map((calendar) => {
-        return {
-          id: calendar.id,
-          summary: calendar.summary,
-          description: calendar.description
-        }
-      });    
+      const calendars = res.data.items.map((calendar) => {
+      	return {
+	        id: calendar.id,
+	        summary: calendar.summary,
+	        description: calendar.description
+	      }
+      })
+      
+      return { data: calendars }
     });
 }
 
@@ -40,7 +42,28 @@ function getBusyTimes(calendars = [], days) {
     })
     .then((res, err) => {
       if (err) return false;
-      return res.data.calendars;
+      const busyTimes = [];
+      for (const id in res.data.calendars) {
+        res.data.calendars[id].busy.forEach((busyTime) => {
+          if (!busyTimes.includes(busyTime)) busyTimes.push({
+            start: moment(busyTime.start).format(),
+            end: moment(busyTime.end).format()
+          });
+        })
+      };
+      
+      return { 
+        data: busyTimes.sort((a, b) => { 
+          return new Date(a.start) - new Date(b.start)
+        }) 
+      }
+    });
+}
+
+function getAllBusyTimes(days) {
+  return this.getCalendarList()
+    .then((calendars) => {
+      return (calendars.data) ? getBusyTimes(calendars.data, days) : false
     });
 }
 
@@ -64,12 +87,24 @@ function getEvents(calendarId = 'primary') {
           creator: event.creator
         }  
       });
-      return events;
+      
+      return { data: events }
+    });
+}
+
+function addCalendar() {
+  const gc = googleCalendar();
+  return gc.calendars
+    .insert({ requestBody: { summary: "Full Cup" }})
+    .then((res, err) => {
+      return (err) ? false : true;
     });
 }
 
 module.exports = {
 	getCalendarList,
 	getBusyTimes,
-  getEvents
+  getAllBusyTimes,
+  getEvents,
+  addCalendar
 }
