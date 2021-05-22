@@ -1,15 +1,11 @@
 const {google} = require('googleapis');
-const fs = require('fs');
-const {getAuthorization, getAccessToken} = require('../helpers/auth');
+const {getAuthorization} = require('../helpers/auth');
 const moment = require('moment');
 
 const googleCalendar = () => {
-  // Load client secrets from local file
-  const cred = JSON.parse(fs.readFileSync('credentials.json'));
-  // Authorize a client with credentials
-  const auth = getAuthorization(cred);
-  // Call Google Calendar API
-  return google.calendar({version: 'v3', auth});
+  // Authorize access to Google Calendar
+  const auth = getAuthorization();
+  return google.calendar({ version: 'v3', auth });
 }
 
 function getCalendarList() {
