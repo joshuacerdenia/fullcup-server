@@ -12,7 +12,7 @@ function getCalendarList() {
   const gc = googleCalendar();
   return gc.calendarList
   .list()
-  .then((res => {
+  .then((res) => {
     const calendars = res.data.items.map((calendar) => {
       return {
         id: calendar.id,
@@ -23,7 +23,7 @@ function getCalendarList() {
     
     return { data: calendars }
   })
-  .catch((res) => res.errors));
+  .catch((res) => res.errors);
 }
 
 function getBusyTimes(calendars = [], days) {
