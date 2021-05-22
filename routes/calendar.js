@@ -32,6 +32,13 @@ router.post('/add-calendar', (req, res) => {
   CalendarController
   .addCalendar()
   .then((result) => res.send(result));
-})
+});
+
+router.post('/add-event', (req, res) => {
+  const event = req.body.event;
+  CalendarController
+  .addEvent(event)
+  .then((result) => res.send(result));
+});
 
 module.exports = router;

@@ -12,8 +12,7 @@ function getCalendarList() {
   const gc = googleCalendar();
   return gc.calendarList
   .list()
-  .then((res, err) => {
-    if (err) return false;
+  .then((res => {
     const calendars = res.data.items.map((calendar) => {
       return {
         id: calendar.id,
@@ -23,7 +22,8 @@ function getCalendarList() {
     })
     
     return { data: calendars }
-  });
+  })
+  .catch((res) => res.errors));
 }
 
 function getBusyTimes(calendars = [], days) {
@@ -36,8 +36,8 @@ function getBusyTimes(calendars = [], days) {
       return { id: calendar.id }
     })}
   })
-  .then((res, err) => {
-    if (err) return false;
+  .then((res) => {
+    // Get a flat array of busy times across all given calendars
     const busyTimes = [];
     for (const id in res.data.calendars) {
       res.data.calendars[id].busy.forEach((busyTime) => {
@@ -53,7 +53,8 @@ function getBusyTimes(calendars = [], days) {
         return new Date(a.start) - new Date(b.start)
       }) 
     }
-  });
+  })
+  .catch((res) => res.errors);
 }
 
 function getAllBusyTimes(days) {
@@ -73,8 +74,7 @@ function getEvents(calendarId = 'primary') {
     singleEvents: true,
     orderBy: 'startTime',
   })
-  .then((res, err) => {
-    if (err) return false;
+  .then((res) => {
     const events = res.data.items.map((event) => {
       return {
         summary: event.summary,
@@ -85,16 +85,26 @@ function getEvents(calendarId = 'primary') {
     });
     
     return { data: events }
-  });
+  })
+  .catch((res) => res.errors);
 }
 
 function addCalendar() {
   const gc = googleCalendar();
   return gc.calendars
   .insert({ requestBody: { summary: "Full Cup" }})
-  .then((res, err) => {
-    return (err) ? false : true;
-  });
+  .then((res) => res.status)
+  .catch((res) => res.errors);
+}
+
+function addEvent(event) {
+  const gc = googleCalendar();
+  return gc.events.insert({
+    calendarId: 'primary', // change later
+    resource: event,
+  })
+  .then((res) => res.status)
+  .catch((res) => res.errors);
 }
 
 module.exports = {
@@ -102,5 +112,6 @@ module.exports = {
   getBusyTimes,
   getAllBusyTimes,
   getEvents,
-  addCalendar
+  addCalendar,
+  addEvent
 }
