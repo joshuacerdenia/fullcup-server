@@ -41,4 +41,19 @@ router.post('/add-event', (req, res) => {
   .then((result) => res.send(result));
 });
 
+router.post('/add-events', (req, res) => {
+  const events = req.body.events
+  CalendarController
+  .addEvents(events)
+  .then((result) => res.send(result));
+})
+
+// Just for testing
+router.post('/post-test', (req, res) => {
+	console.log("Got request:");
+	console.log(req.body);
+	res.send({ response: "OK" });
+})
+
+
 module.exports = router;

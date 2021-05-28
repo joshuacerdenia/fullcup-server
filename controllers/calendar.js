@@ -1,6 +1,7 @@
 const {google} = require('googleapis');
 const {getAuthorization} = require('../helpers/auth');
 const moment = require('moment');
+const momentTZ = require('moment-timezone');
 
 const googleCalendar = () => {
   // Authorize access to Google Calendar
@@ -103,8 +104,50 @@ function addEvent(event) {
     calendarId: 'primary', // change later
     resource: event,
   })
-  .then((res) => res.status)
+  .then((res) => true)
   .catch((res) => res.errors);
+}
+
+async function addEvents(rawEvents = []) {
+  const responses = [];
+  
+  const events = rawEvents.map((rawEvent) => {
+    const recurrence = [];
+
+    if (rawEvent.recurrence === "everyday") {
+      recurrence.push('RRULE:FREQ=DAILY;INTERVAL=1;COUNT=7')
+    }
+
+    if (rawEvent.recurrence === "weekends") {
+      recurrence.push('RRULE:FREQ=WEEKLY;BYDAY=FR,SA;INTERVAL=1;COUNT=2')
+    }
+
+    if (rawEvent.recurrence === "weekdays") {
+      recurrence.push('RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH;INTERVAL=1;COUNT=5')
+    }
+
+    return {
+      summary: rawEvent.summary,
+      start: { 
+        dateTime: moment(rawEvent.start).format(),
+        timeZone: momentTZ.tz.guess() 
+      },
+      end: { 
+        dateTime: moment(rawEvent.start)
+        .add(rawEvent.durationInMins, 'minutes')
+        .format(),
+        timeZone: momentTZ.tz.guess() 
+      },
+      recurrence: recurrence
+    }
+  });
+
+  for (let i = 0; i < events.length; i++) {
+    const response = await this.addEvent(events[i]);
+    responses.push(response);
+  }
+
+  return responses;
 }
 
 module.exports = {
@@ -113,5 +156,6 @@ module.exports = {
   getAllBusyTimes,
   getEvents,
   addCalendar,
-  addEvent
+  addEvent,
+  addEvents
 }
