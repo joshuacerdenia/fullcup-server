@@ -8,8 +8,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 app.use('/api/calendar', require('./routes/calendar'));
+app.use('/api/events', require('./routes/events'));
 
 app.get('/', (req, res) => res.send("Server online."));
 app.listen(4000, () => console.log('We are up and running!'));
 
-authorize(); // For first-time use
+authorize(); // For first-time use.

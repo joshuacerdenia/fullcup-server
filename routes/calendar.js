@@ -1,4 +1,4 @@
-const express = require('express')
+const express = require('express');
 const router = express.Router();
 const CalendarController = require('../controllers/calendar');
 
@@ -22,38 +22,17 @@ router.post('/get-all-busy-times', (req, res) => {
   .then((result) => res.send(result));
 })
 
-router.get('/get-events', (req, res) => {
-  CalendarController
-  .getEvents(undefined)
-  .then((result) => res.send(result));
-});
-
 router.post('/add-calendar', (req, res) => {
   CalendarController
   .addCalendar()
   .then((result) => res.send(result));
 });
 
-router.post('/add-event', (req, res) => {
-  const event = req.body.event;
-  CalendarController
-  .addEvent(event)
-  .then((result) => res.send(result));
-});
-
-router.post('/add-events', (req, res) => {
-  const events = req.body.events
-  CalendarController
-  .addEvents(events)
-  .then((result) => res.send(result));
-})
-
-// Just for testing
+// For testing only.
 router.post('/post-test', (req, res) => {
 	console.log("Got request:");
 	console.log(req.body);
-	res.send({ response: "OK" });
-})
-
+	res.send({ results: "OK" });
+});
 
 module.exports = router;
