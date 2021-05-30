@@ -80,11 +80,11 @@ async function syncEvents(rawEvents = [], idsToDelete = []) {
     }
 
     if (rawEvent.recurrence === "weekend") {
-      recurrence.push('RRULE:FREQ=WEEKLY;BYDAY=FR,SA;INTERVAL=1;COUNT=2')
+      recurrence.push('RRULE:FREQ=WEEKLY;BYDAY=SA,SU;INTERVAL=1;COUNT=2')
     }
 
     if (rawEvent.recurrence === "weekday") {
-      recurrence.push('RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH;INTERVAL=1;COUNT=5')
+      recurrence.push('RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;INTERVAL=1;COUNT=5')
     }
 
     return {
@@ -112,7 +112,6 @@ async function syncEvents(rawEvents = [], idsToDelete = []) {
   }
 
   for (let i = 0; i < events.length; i++) {
-    console.log(events[i].id)
     if (!events[i].id) {
       // If no ID, the event doesn't exist yet on GoogleCal.
       const eventCreated = await addEvent(events[i]);
