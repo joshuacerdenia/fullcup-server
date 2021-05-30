@@ -8,17 +8,11 @@ router.get('/get-events', (req, res) => {
   .then((result) => res.send(result));
 });
 
-router.post('/add-event', (req, res) => {
-  const event = req.body.event;
+router.post('/sync-events', (req, res) => {
+  const events = req.body.events;
+  const idsForDeletion = req.body.idsForDeletion;
   EventsController
-  .addEvent(event)
-  .then((result) => res.send(result));
-});
-
-router.post('/add-events', (req, res) => {
-  const events = req.body.events
-  EventsController
-  .addEvents(events)
+  .syncEvents(events, idsForDeletion)
   .then((result) => res.send(result));
 });
 

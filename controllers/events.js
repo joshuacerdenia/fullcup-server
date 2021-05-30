@@ -36,7 +36,7 @@ function getEvents(calendarId = 'primary') {
 function addEvent(event) {
   const gc = googleCalendar();
   return gc.events.insert({
-    calendarId: 'primary', // change later
+    calendarId: 'primary',
     resource: event,
   })
   .then((res) => {
@@ -45,25 +45,50 @@ function addEvent(event) {
   .catch((res) => res.errors);
 }
 
+function patchEvent(event) {
+  const gc = googleCalendar();
+  return gc.events.patch({
+    calendarId: 'primary',
+    eventId: event.id,
+    resource: event
+  })
+  .then((res) => {
+    return { id: res.data.id, summary: res.data.summary }
+  })
+  .catch((res) => res.errors);
+}
 
-async function addEvents(rawEvents = []) {
-  const eventsCreated = [];
+function deleteEvent(eventId) {
+  const gc = googleCalendar()
+  return gc.events.delete({
+    calendarId: 'primary',
+    eventId: eventId
+  })
+  .then((res) => true)
+  .catch((res) => false);
+}
+
+
+async function syncEvents(rawEvents = [], idsToDelete = []) {
+  const fullCupEvents = [];
+
   const events = rawEvents.map((rawEvent) => {
-    let recurrence = null;
+    const recurrence = [];
 
     if (rawEvent.recurrence === "daily") {
-      recurrence = 'FREQ=DAILY;INTERVAL=1;COUNT=7'
+      recurrence.push('RRULE:FREQ=DAILY;INTERVAL=1;COUNT=7')
     }
 
     if (rawEvent.recurrence === "weekend") {
-      recurrence = 'FREQ=WEEKLY;BYDAY=FR,SA;INTERVAL=1;COUNT=2'
+      recurrence.push('RRULE:FREQ=WEEKLY;BYDAY=FR,SA;INTERVAL=1;COUNT=2')
     }
 
     if (rawEvent.recurrence === "weekday") {
-      recurrence = 'RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH;INTERVAL=1;COUNT=5'
+      recurrence.push('RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH;INTERVAL=1;COUNT=5')
     }
 
     return {
+      id: rawEvent.googleId,
       summary: rawEvent.summary,
       start: { 
         dateTime: moment(rawEvent.start).format(),
@@ -75,20 +100,33 @@ async function addEvents(rawEvents = []) {
         .format(),
         timeZone: rawEvent.timeZone
       },
-      recurrence: [`RRULE:${recurrence}`]
+      recurrence: recurrence
     }
   });
 
-  for (let i = 0; i < events.length; i++) {
-    const eventCreated = await this.addEvent(events[i]);
-    eventsCreated.push(eventCreated);
+  if (idsToDelete.length > 0) {
+    for (let i = 0; i < idsToDelete.length; i++) {
+      const res = await deleteEvent(idsToDelete[i]);
+      // Save response?
+    }
   }
 
-  return { results: eventsCreated }
+  for (let i = 0; i < events.length; i++) {
+    console.log(events[i].id)
+    if (!events[i].id) {
+      // If no ID, the event doesn't exist yet on GoogleCal.
+      const eventCreated = await addEvent(events[i]);
+      fullCupEvents.push(eventCreated);
+    } else {
+      const eventPatched = await patchEvent(events[i]);
+      fullCupEvents.push(eventPatched)
+    }
+  }
+
+  return { results: fullCupEvents }
 }
 
 module.exports = {
-	getEvents,
-	addEvent,
-	addEvents
+  getEvents,
+  syncEvents,
 }
