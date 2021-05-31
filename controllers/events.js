@@ -1,13 +1,16 @@
 const {google} = require('googleapis');
-const {getAuthorization} = require('../helpers/auth');
 const moment = require('moment');
+const {getAuthorization} = require('../helpers/auth');
+const {getRecurrenceRule} = require('../helpers/recurrence');
 
+// Authorize access to Google Calendar.
 const googleCalendar = () => {
-  // Authorize access to Google Calendar.
   const auth = getAuthorization();
   return google.calendar({ version: 'v3', auth });
 }
 
+// Return a list of the next 10 scheduled events
+// from the moment the request is made.
 function getEvents(calendarId = 'primary') {
   const gc = googleCalendar();
   return gc.events
@@ -28,11 +31,13 @@ function getEvents(calendarId = 'primary') {
       }  
     });
     
-    return { results: events }
+    return events;
   })
   .catch((res) => res.errors);
 }
 
+// Adds one event to a user's primary calendar.
+// Returns the ID of the added event.
 function addEvent(event) {
   const gc = googleCalendar();
   return gc.events.insert({
@@ -45,6 +50,8 @@ function addEvent(event) {
   .catch((res) => res.errors);
 }
 
+// Updates an existing event in the primary calendar.
+// Returns the ID of the updated event.
 function patchEvent(event) {
   const gc = googleCalendar();
   return gc.events.patch({
@@ -68,25 +75,11 @@ function deleteEvent(eventId) {
   .catch((res) => false);
 }
 
-
 async function syncEvents(rawEvents = [], idsToDelete = []) {
   const fullCupEvents = [];
 
+  // Map raw events to GoogleCalendar's expected format.
   const events = rawEvents.map((rawEvent) => {
-    const recurrence = [];
-
-    if (rawEvent.recurrence === "daily") {
-      recurrence.push('RRULE:FREQ=DAILY;INTERVAL=1;COUNT=7')
-    }
-
-    if (rawEvent.recurrence === "weekend") {
-      recurrence.push('RRULE:FREQ=WEEKLY;BYDAY=SA,SU;INTERVAL=1;COUNT=2')
-    }
-
-    if (rawEvent.recurrence === "weekday") {
-      recurrence.push('RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;INTERVAL=1;COUNT=5')
-    }
-
     return {
       id: rawEvent.googleId,
       summary: rawEvent.summary,
@@ -100,7 +93,7 @@ async function syncEvents(rawEvents = [], idsToDelete = []) {
         .format(),
         timeZone: rawEvent.timeZone
       },
-      recurrence: recurrence
+      recurrence: getRecurrenceRule(rawEvent.recurrence)
     }
   });
 
@@ -117,6 +110,7 @@ async function syncEvents(rawEvents = [], idsToDelete = []) {
       const eventCreated = await addEvent(events[i]);
       fullCupEvents.push(eventCreated);
     } else {
+      // If ID exists, patch the event instead.
       const eventPatched = await patchEvent(events[i]);
       fullCupEvents.push(eventPatched)
     }
